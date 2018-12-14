@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/cccong/mtfcd/issues"
   },
-  "homepage": "https://github.com/cccong/mtfcd#readme"
+  "homepage": "https://github.com/cccong/mtfcd#readme",
+  "dependencies": {
+    "koa": "^2.6.2"
+  }
 }
