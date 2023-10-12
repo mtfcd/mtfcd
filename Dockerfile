@@ -1,20 +1,14 @@
-# Leveraging the pre-built Docker images with
-# cargo-chef and the Rust toolchain
-FROM lukemathwalker/cargo-chef:latest-rust-1.72.0 AS chef
+# Using the `rust-musl-builder` as base image, instead of 
+# the official Rust toolchain
+FROM clux/muslrust:stable AS builder
+USER root
+COPY ./config /root/.cargo/config
 WORKDIR /app
-
-FROM chef AS planner
 COPY . .
-RUN cargo chef prepare --recipe-path recipe.json
+RUN cargo build --release --target x86_64-unknown-linux-musl
 
-FROM chef AS builder
-COPY --from=planner /app/recipe.json recipe.json
-# Build dependencies - this is the caching Docker layer!
-RUN cargo chef cook --recipe-path recipe.json
-
-COPY . .
-RUN cargo build --release
-
-FROM debian:stable-slim AS template-rust
-COPY --from=builder /app/target/release/quotes /usr/local/bin
-ENTRYPOINT ["/usr/local/bin/quotes"]
+FROM alpine AS runtime
+RUN addgroup -S myuser && adduser -S myuser -G myuser
+COPY --from=builder /app/target/x86_64-unknown-linux-musl/release/quotes /usr/local/bin/
+USER myuser
+CMD ["/usr/local/bin/quotes"]
